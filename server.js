@@ -80,7 +80,7 @@ app.post('/p2p-seller_master-buyer', function(req, res){
 });
 
  // gets buyer info
-app.get('/buyer-info', function(req, res){
+app.post('/buyer-info', function(req, res){
   if(!req.body.buyer_id){
     res.send({message:'params error', status_code: 400});
   }else{
