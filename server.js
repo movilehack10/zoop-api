@@ -59,7 +59,9 @@ app.post('/one-click-pay', function(req, res){
   }
 });
 
-app.post('/p2p-seller-buyer', function(req, res){
+// parameters: buyer_id and amount
+//
+app.post('/p2p-seller_master-buyer', function(req, res){
   if(!req.body.buyer_id || !req.body.amount){
     res.send({message:'params error', status_code: 400});
   }else{
@@ -76,6 +78,43 @@ app.post('/p2p-seller-buyer', function(req, res){
       })
   }
 });
+
+ // gets buyer info
+app.get('/buyer-info', function(req, res){
+  if(!req.body.buyer_id){
+    res.send({message:'params error', status_code: 400});
+  }else{
+    zoopCtrl.buyerInfo(req.body.buyer_id)
+      .then((response) =>{
+        if(response.error){
+          res.send(response.error);
+        }else{
+          res.send(response)
+        }
+      })
+      .catch((error) =>{
+        res.send({message:'params error', status_code: 500});
+      })
+  }
+});
+
+// app.post('/p2p-buyer-seller_slave', function(req, res){
+//   if(!req.body.buyer_id || !req.body.amount){
+//     res.send({message:'params error', status_code: 400});
+//   }else{
+//     zoopCtrl.transactionP2P(req.body.buyer_id, process.env.SELLER_SLAVE, req.body.amount)
+//       .then((response) =>{
+//         if(response.error){
+//           res.send(response.error);
+//         }else{
+//           res.send(response)
+//         }
+//       })
+//       .catch((error) =>{
+//         res.send({message:'params error', status_code: 500});
+//       })
+//   }
+// });
 
 app.listen(3004,function(){
   console.log("Ouvindo a porta 3004!");

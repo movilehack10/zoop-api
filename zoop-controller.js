@@ -92,6 +92,7 @@ function oneClickPay(buyer_id, amount){
   });
 }
 
+// Transaction between wallets
 function transactionP2P(owner, receiver, amount){
   const auth = "Basic " + new Buffer(process.env.PUB_KEY + ": ").toString("base64");
 
@@ -120,11 +121,35 @@ function transactionP2P(owner, receiver, amount){
   });
 }
 
+function buyerInfo(buyer_id){
+  const auth = "Basic " + new Buffer(process.env.PUB_KEY + ": ").toString("base64");
+
+  let options = {
+    headers : {
+      "Authorization": auth,
+    },
+    method: 'GET',
+    url: `https://api.zoop.ws/v1/marketplaces/${process.env.MARKETPLACE_ID}/buyers/${buyer_id}`,
+  };
+
+  return new Promise((resolve, reject) => {
+    request(options, function (error, response, body){
+      if (error){
+        reject(error);
+      }
+      else {
+        resolve(body);
+      }
+    });
+  });
+}
+
 module.exports = {
   newWallet: newWallet,
   associateCardCustomer: associateCardCustomer,
   oneClickPay: oneClickPay,
-  transactionP2P: transactionP2P
+  transactionP2P: transactionP2P,
+  buyerInfo: buyerInfo
 };
 
 // // card not present transaction
