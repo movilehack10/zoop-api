@@ -8,10 +8,11 @@ dbPromise.then(db =>
     db.run(
       `CREATE TABLE IF NOT EXISTS tokens (
         id INTEGER PRIMARY KEY,
-        tokenValue UNIQUE,
+        token_value UNIQUE,
         expire_time,
         limit_money_ammout INTEGER,
-        limit_used_times INTEGER
+        limit_used_times INTEGER,
+        CHECK (limit_used_times >= 0)
       )`
     ),
     db.run(
@@ -27,8 +28,8 @@ dbPromise.then(db =>
       `CREATE TABLE IF NOT EXISTS wallets_tokens (
         id_token,
         id_wallet,
-        FOREIGN KEY (id_token) REFERENCES token (id),
-        FOREIGN KEY (id_token) REFERENCES token (id)
+        FOREIGN KEY (id_token) REFERENCES tokens (id),
+        FOREIGN KEY (id_wallet) REFERENCES wallets (id)
       )`
     )
   ])
@@ -39,7 +40,7 @@ function createToken(db, idWallet, tokenInfo = {expire_time, limit_money_ammout,
     (resolve, reject) => crypto.randomBytes(128, async (err, buffer) => {
       if (err) return reject(err)
 
-      tokenId = buffer.toString('hex');
+      tokenValue = buffer.toString('hex');
       expire_time = tokenInfo.expire_time || Date.now();
       limit_money_ammout = tokenInfo.limit_money_ammout || 1000;
       limit_used_times = tokenInfo.limit_used_times || 5;
@@ -47,21 +48,57 @@ function createToken(db, idWallet, tokenInfo = {expire_time, limit_money_ammout,
       try {
         wallet = await db.get('SELECT * FROM wallets WHERE ? = id', [idWallet])
         await db.run(
-          'INSERT INTO tokens (tokenValue, expire_time, limit_money_ammout, limit_used_times) VALUES (?, ?, ?, ?)',
-          [ tokenId, expire_time, limit_money_ammout, limit_used_times ]
+          'INSERT INTO tokens (token_value, expire_time, limit_money_ammout, limit_used_times) VALUES (?, ?, ?, ?)',
+          [ tokenValue, expire_time, limit_money_ammout, limit_used_times ]
         )
-        token = await db.get('SELECT id FROM tokens WHERE ? = tokenValue', [tokenId])
-        console.log({tokenId, wallet})
-        await db.run(
+        token = await db.get('SELECT id FROM tokens WHERE ? = token_value', [tokenValue])
+        const ret = await db.run(
           'INSERT INTO wallets_tokens (id_token, id_wallet) VALUES (?, ?)',
-          [ tokenId, idWallet ]
+          [ tokenValue, idWallet ]
         )
-        return resolve(true)
+        return resolve(
+          await db.get('SELECT * FROM tokens WHERE token_value = ?', [ tokenValue ])
+        )
       } catch (error) {
         return reject(error)
       }
     })
   )
+}
+
+async function spendToken(db, androidId, tokenValue, amount) {
+  // retrieve Wallet
+  const receiverWallet = await db.get('SELECT * FROM wallets WHERE android_id = ?', [androidId])
+  const senderToken = await db.get(
+    `SELECT * FROM tokens WHERE limit_used_times > 0 AND expire_time >= ? AND
+    token_value = ? AND limit_money_ammout >= ?`,
+    [  Date.now(), tokenValue, amount ]
+  )
+  if (senderToken == null) {
+    return Promise.reject('Não autorizado')
+  }
+  const senderWallet = await db.get('SELECT * FROM wallets JOIN wallets_tokens WHERE id_token = ?', [token.id])
+
+  try {
+    await db.run('BEGIN TRANSACTION')
+    await db.run(
+      `UPDATE tokens
+      SET limit_used_times = limit_used_times - 1
+      WHERE id = ?`,
+      [senderToken.id]
+    )
+    // zoopApi.p2p({
+    //   to: receiverWallet.zoop_buyer_id,
+    //   from: senderWallet.zoop_buyer_id,
+    //   amount: amount
+    // })
+    await db.run('COMMIT')
+    return Promise.resolve({msg: 'Autorizado'});
+  } catch (error) {
+    await db.run('ROLLBACK')
+    console.log({error})
+    return Promise.reject({msg: 'Não autorizado', error});
+  }
 }
 
 async function createWallet(db, androidId) {
@@ -78,6 +115,7 @@ async function createWallet(db, androidId) {
       'SELECT * FROM wallets WHERE android_id = ?',
       [ androidId ]
     )
+    return Promise.resolve(wallet)
   } catch (error) {
     return Promise.reject(error)
   }
@@ -85,10 +123,26 @@ async function createWallet(db, androidId) {
 
 function test() {
   sqlite.open('./data/sqlite.db', { Promise }).then(async (db) => {
-    await createWallet(db);
-    await createToken(db, wallet.id, {}).catch(e => console.log({'catch': e})).then(e => console.log({'result': e}))
+    try {
+      const w1 = await createWallet(db);
+      // console.log({w1})
+      const w2 = await createWallet(db);
+      // console.log({w2})
+      const token = await createToken(db, w1.id, {
+        expire_time: Date.now() + (Date.parse('05 Jan 1970 00:00:00 GMT') - Date.parse('01 Jan 1970 00:00:00 GMT')),
+        limit_money_ammout: 1500,
+        limit_used_times: 10,
+      })
+      // console.log({token})
+      const result = await spendToken(db, w2['android_id'], token['token_value'], 10)
+      console.log({result})
+    } catch (e) {
+      console.log({e})
+    }
   })
 }
+
+test()
 
 // module.exports = {
 //   newWallet: newWallet
