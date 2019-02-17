@@ -21,11 +21,11 @@ O app faz requisições HTTP para o server que está integrado com a API de paga
 
 ## Modo de Usar
 ```
-* git clone link_repositorio
-* cd repositorio_local_na_maquina
-* npm install
-* npm start ou node server.js
-* Browser --> locahost:3004
+git clone link_repositorio
+cd repositorio_local_na_maquina
+npm install
+npm start ou node server.js
+Browser --> locahost:3004
 ```
 
 
