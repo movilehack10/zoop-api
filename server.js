@@ -1,7 +1,11 @@
 const express = require('express');
-const app = express();
+const compression = require('compression');
 const bodyParser = require('body-parser');
 const zoopCtrl = require("./zoop-controller");
+
+const app = express();
+
+app.use(compression())
 require('dotenv').config();
 
 app.use(bodyParser.json());
