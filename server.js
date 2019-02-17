@@ -9,7 +9,7 @@ app.use(compression())
 require('dotenv').config();
 
 app.use(bodyParser.json());
-// app.use(bodyParser.urlencoded({extended:false}));
+app.use(bodyParser.urlencoded({extended:false}));
 
 app.get('/', function(req,res){
   zoopCtrl.newWallet()
@@ -17,9 +17,45 @@ app.get('/', function(req,res){
       res.send(response);
     })
     .catch((err) => {
-      res.err(err);
+      res.send({message:'server error', status_code: 500});
     })
 })
+
+app.post('/credit-transaction', function(req, res){
+  if(!req.body.buyer_id || !req.body.amount){
+    res.send({message:'params error', status_code: 400});
+  }else{
+    zoopCtrl.createCreditTransaction(req.body.buyer_id,req.body.amount)
+      .then((response) => {
+        if(response.error){
+          res.send(response.error);
+        }else{
+          res.send(response);
+        }
+      })
+      .catch((err) =>{
+        res.send({message:'server error', status_code: 500});
+      })
+  }
+});
+
+app.post('/associate-card-customer', function(req, res){
+  if(!req.body.buyer_id || !req.body.card_token){
+    res.send({message:'params error', status_code: 400});
+  }else{
+    zoopCtrl.associateCardCustomer(req.body.buyer_id, req.body.card_token)
+      .then((association) => {
+        if(association.error){
+          res.send(association.error);
+        }else{
+          res.send(association);
+        }
+      })
+      .catch((err) =>{
+        res.send({message:'server error', status_code: 500});
+      })
+  }
+});
 
 app.listen(3004,function(){
   console.log("Ouvindo a porta 3004!");
