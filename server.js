@@ -21,42 +21,7 @@ app.get('/', function(req,res){
     })
 })
 
-// app.post('/credit-transaction', function(req, res){
-//   if(!req.body.buyer_id || !req.body.amount){
-//     res.send({message:'params error', status_code: 400});
-//   }else{
-//     zoopCtrl.createCreditTransaction(req.body.buyer_id,req.body.amount)
-//       .then((response) => {
-//         if(response.error){
-//           res.send(response.error);
-//         }else{
-//           res.send(response);
-//         }
-//       })
-//       .catch((err) =>{
-//         res.send({message:'server error', status_code: 500});
-//       })
-//   }
-// });
-
-app.post('/recharge-card', function(req, res){
-  if(!req.body.buyer_id || !req.body.amount || !req.body.card_token){
-    res.send({message:'params error', status_code: 400});
-  }else{
-    // zoopCtrl.rechargeCard(req.body.buyer_id, req.body.card_token, req.body.amount)
-    //   .then((response) => {
-    //     if(response.error){
-    //       res.send(response.error);
-    //     }else{
-    //       res.send(response)
-    //     }
-    //   })
-    //   .catch((error) =>{
-    //     res.send({message:'server error', status_code: 500});
-    //   })
-  }
-})
-
+// parameters: buyer_id and card_token
 app.post('/associate-card-customer', function(req, res){
   if(!req.body.buyer_id || !req.body.card_token){
     res.send({message:'params error', status_code: 400});
@@ -75,6 +40,7 @@ app.post('/associate-card-customer', function(req, res){
   }
 });
 
+// parameters: buyer_id and amount
 app.post('/one-click-pay', function(req, res){
   if(!req.body.buyer_id || !req.body.amount){
     res.send({message:'params error', status_code: 400});
@@ -96,3 +62,21 @@ app.post('/one-click-pay', function(req, res){
 app.listen(3004,function(){
   console.log("Ouvindo a porta 3004!");
 })
+
+// app.post('/credit-transaction', function(req, res){
+//   if(!req.body.buyer_id || !req.body.amount){
+//     res.send({message:'params error', status_code: 400});
+//   }else{
+//     zoopCtrl.createCreditTransaction(req.body.buyer_id,req.body.amount)
+//       .then((response) => {
+//         if(response.error){
+//           res.send(response.error);
+//         }else{
+//           res.send(response);
+//         }
+//       })
+//       .catch((err) =>{
+//         res.send({message:'server error', status_code: 500});
+//       })
+//   }
+// });

@@ -59,6 +59,73 @@ function associateCardCustomer(buyer_id, card_token){
   });
 }
 
+function oneClickPay(buyer_id, amount){
+  const auth = "Basic " + new Buffer(process.env.PUB_KEY + ": ").toString("base64");
+
+  let options = {
+    headers : {
+      "Authorization": auth,
+      "Content-type": "application/json"
+    },
+    method: 'POST',
+    url: `https://api.zoop.ws/v1/marketplaces/${process.env.MARKETPLACE_ID}/transactions`,
+    json: {
+      "amount": amount,
+      "currency": "BRL",
+      "description": "venda",
+      "on_behalf_of": process.env.SELLER_MASTER,
+      "customer": buyer_id,
+      "payment_type": "credit",
+      "reference_id": "1234"
+    }
+  };
+
+  return new Promise((resolve, reject) => {
+    request(options, function (error, response, body){
+      if (error){
+        reject(error);
+      }
+      else {
+        resolve(body);
+      }
+    });
+  });
+}
+
+function transactionP2P(owner, receiver, amount){
+  const auth = "Basic " + new Buffer(process.env.PUB_KEY + ": ").toString("base64");
+
+  let options = {
+    headers : {
+      "Authorization": auth,
+      "Content-type": "application/json"
+    },
+    method: 'POST',
+    url: `https://api.zoop.ws/v2/marketplaces/${process.env.MARKETPLACE_ID}/transfers/${owner}/to/${receiver}`,
+    json: {
+      "amount": amount,
+      "description": "venda",
+    }
+  };
+
+  return new Promise((resolve, reject) => {
+    request(options, function (error, response, body){
+      if (error){
+        reject(error);
+      }
+      else {
+        resolve(body);
+      }
+    });
+  });
+}
+
+module.exports = {
+  newWallet: newWallet,
+  associateCardCustomer: associateCardCustomer,
+  oneClickPay: oneClickPay
+};
+
 // // card not present transaction
 // function createCreditTransaction(buyer_id, amount){
   // const auth = "Basic " + new Buffer(process.env.PUB_KEY + ": ").toString("base64");
@@ -99,42 +166,3 @@ function associateCardCustomer(buyer_id, card_token){
 //     });
 //   });
 // }
-
-function oneClickPay(buyer_id, amount){
-  const auth = "Basic " + new Buffer(process.env.PUB_KEY + ": ").toString("base64");
-
-  let options = {
-    headers : {
-      "Authorization": auth,
-      "Content-type": "application/json"
-    },
-    method: 'POST',
-    url: `https://api.zoop.ws/v1/marketplaces/${process.env.MARKETPLACE_ID}/transactions`,
-    json: {
-      "amount": amount,
-      "currency": "BRL",
-      "description": "venda",
-      "on_behalf_of": process.env.SELLER_MASTER,
-      "customer": buyer_id,
-      "payment_type": "credit",
-      "reference_id": "1234"
-    }
-  };
-
-  return new Promise((resolve, reject) => {
-    request(options, function (error, response, body){
-      if (error){
-        reject(error);
-      }
-      else {
-        resolve(body);
-      }
-    });
-  });
-}
-
-module.exports = {
-  newWallet: newWallet,
-  associateCardCustomer: associateCardCustomer,
-  oneClickPay: oneClickPay
-};
