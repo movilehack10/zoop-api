@@ -123,7 +123,8 @@ function transactionP2P(owner, receiver, amount){
 module.exports = {
   newWallet: newWallet,
   associateCardCustomer: associateCardCustomer,
-  oneClickPay: oneClickPay
+  oneClickPay: oneClickPay,
+  transactionP2P: transactionP2P
 };
 
 // // card not present transaction
