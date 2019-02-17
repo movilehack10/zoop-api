@@ -21,24 +21,7 @@ app.get('/', function(req,res){
     })
 })
 
-app.post('/credit-transaction', function(req, res){
-  if(!req.body.buyer_id || !req.body.amount){
-    res.send({message:'params error', status_code: 400});
-  }else{
-    zoopCtrl.createCreditTransaction(req.body.buyer_id,req.body.amount)
-      .then((response) => {
-        if(response.error){
-          res.send(response.error);
-        }else{
-          res.send(response);
-        }
-      })
-      .catch((err) =>{
-        res.send({message:'server error', status_code: 500});
-      })
-  }
-});
-
+// parameters: buyer_id and card_token
 app.post('/associate-card-customer', function(req, res){
   if(!req.body.buyer_id || !req.body.card_token){
     res.send({message:'params error', status_code: 400});
@@ -48,7 +31,7 @@ app.post('/associate-card-customer', function(req, res){
         if(association.error){
           res.send(association.error);
         }else{
-          res.send(association);
+          res.send(association.id);
         }
       })
       .catch((err) =>{
@@ -57,6 +40,100 @@ app.post('/associate-card-customer', function(req, res){
   }
 });
 
+// parameters: buyer_id and amount
+app.post('/one-click-pay', function(req, res){
+  if(!req.body.buyer_id || !req.body.amount){
+    res.send({message:'params error', status_code: 400});
+  }else{
+    zoopCtrl.oneClickPay(req.body.buyer_id, req.body.amount)
+      .then((response) =>{
+        if(response.error){
+          res.send(response.error);
+        }else{
+          res.send(response)
+        }
+      })
+      .catch((error) =>{
+        res.send({message:'params error', status_code: 500});
+      })
+  }
+});
+
+// parameters: buyer_id and amount
+//
+app.post('/p2p-seller_master-buyer', function(req, res){
+  if(!req.body.buyer_id || !req.body.amount){
+    res.send({message:'params error', status_code: 400});
+  }else{
+    zoopCtrl.transactionP2P(process.env.SELLER_MASTER, req.body.buyer_id, req.body.amount)
+      .then((response) =>{
+        if(response.error){
+          res.send(response.error);
+        }else{
+          res.send(response)
+        }
+      })
+      .catch((error) =>{
+        res.send({message:'params error', status_code: 500});
+      })
+  }
+});
+
+ // gets buyer info
+app.post('/buyer-info', function(req, res){
+  if(!req.body.buyer_id){
+    res.send({message:'params error', status_code: 400});
+  }else{
+    zoopCtrl.buyerInfo(req.body.buyer_id)
+      .then((response) =>{
+        if(response.error){
+          res.send(response.error);
+        }else{
+          res.send(response)
+        }
+      })
+      .catch((error) =>{
+        res.send({message:'params error', status_code: 500});
+      })
+  }
+});
+
+// app.post('/p2p-buyer-seller_slave', function(req, res){
+//   if(!req.body.buyer_id || !req.body.amount){
+//     res.send({message:'params error', status_code: 400});
+//   }else{
+//     zoopCtrl.transactionP2P(req.body.buyer_id, process.env.SELLER_SLAVE, req.body.amount)
+//       .then((response) =>{
+//         if(response.error){
+//           res.send(response.error);
+//         }else{
+//           res.send(response)
+//         }
+//       })
+//       .catch((error) =>{
+//         res.send({message:'params error', status_code: 500});
+//       })
+//   }
+// });
+
 app.listen(3004,function(){
   console.log("Ouvindo a porta 3004!");
 })
+
+// app.post('/credit-transaction', function(req, res){
+//   if(!req.body.buyer_id || !req.body.amount){
+//     res.send({message:'params error', status_code: 400});
+//   }else{
+//     zoopCtrl.createCreditTransaction(req.body.buyer_id,req.body.amount)
+//       .then((response) => {
+//         if(response.error){
+//           res.send(response.error);
+//         }else{
+//           res.send(response);
+//         }
+//       })
+//       .catch((err) =>{
+//         res.send({message:'server error', status_code: 500});
+//       })
+//   }
+// });
