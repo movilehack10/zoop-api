@@ -28,6 +28,9 @@ npm start ou node server.js
 Browser --> locahost:3004
 ```
 
+## Erros encontrados
+* Erros 400 (insufficient_escrow_funds_error)
+* Não conseguimos tirar nada da wallet do Sellers no domingo depois das 08:00
 
 # Entidades
 
