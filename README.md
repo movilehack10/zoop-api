@@ -9,7 +9,7 @@ Nodejs Server - Zoop Api
 ## Descrição
 O app faz requisições HTTP para o server que está integrado com a API de pagamento da ZoopAPI. 
 * Ao carregar, o app requisita ao servidor um novo Buyer (comprador) que será salvo no cache do celular (buyer_id)
-* **Recarga:** para inserir créditos na plataforma, o app tokeniza um cartão (de teste) e retorna para o servidor o token gerado (**compliance**). O server relaciona o card_token com o buyer_id através da API da Zoop. Posteriormente, o valor (amount) de recarga é depositado via "**Transação de Cartão Não Presente (crédito)**" na wallet de um SELLER_MASTER (representa o seller do app) - 4% de taxa"- que, logo em seguida, deposita este valor na **wallet** do Buyer através de uma **transação P2P** 
+* **Recarga:** para inserir créditos na plataforma, o app tokeniza um cartão (de teste) e retorna para o servidor o token gerado (**compliance**). O server relaciona o card_token com o buyer_id através da API da Zoop. Posteriormente, o valor (amount) de recarga é depositado via "**Transação de Cartão Não Presente (crédito)/ one click pay**" na wallet de um SELLER_MASTER (representa o seller do app) - 4% de taxa"- que, logo em seguida, deposita este valor na **wallet** do Buyer através de uma **transação P2P** 
 * **Transações P2P:** Toda transação entre um Buyer e SELLER_SLAVE (representa um loja/comerciante/microempreendedor) é feita através de p2p através do SERVER e do APP.
 
 ## Vocabulário
