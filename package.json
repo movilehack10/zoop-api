@@ -18,6 +18,7 @@
   "homepage": "https://github.com/movilehack10/zoop-api#readme",
   "dependencies": {
     "body-parser": "^1.18.3",
+    "dotenv": "^6.2.0",
     "express": "^4.16.4"
   }
 }
