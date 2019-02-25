@@ -1,9 +1,12 @@
 const sqlite = require('sqlite')
 const crypto = require('crypto')
 
-const dbPromise = sqlite.open('./data/sqlite.db', { Promise });
+let db = sqlite.open('./data/sqlite.db', { Promise });
+function getDatabase() {
+  return db;
+}
 
-dbPromise.then(db =>
+getDatabase().then(db =>
   Promise.all([
     db.run(
       `CREATE TABLE IF NOT EXISTS tokens (
@@ -54,7 +57,7 @@ function createToken(db, idWallet, tokenInfo = {expire_time, limit_money_ammout,
         token = await db.get('SELECT id FROM tokens WHERE ? = token_value', [tokenValue])
         const ret = await db.run(
           'INSERT INTO wallets_tokens (id_token, id_wallet) VALUES (?, ?)',
-          [ tokenValue, idWallet ]
+          [ token.id, idWallet ]
         )
         return resolve(
           await db.get('SELECT * FROM tokens WHERE token_value = ?', [ tokenValue ])
@@ -66,7 +69,7 @@ function createToken(db, idWallet, tokenInfo = {expire_time, limit_money_ammout,
   )
 }
 
-async function spendToken(db, androidId, tokenValue, amount) {
+async function spendToken(db, androidId, tokenValue, amount, p2pCallback) {
   // retrieve Wallet
   const receiverWallet = await db.get('SELECT * FROM wallets WHERE android_id = ?', [androidId])
   const senderToken = await db.get(
@@ -78,6 +81,9 @@ async function spendToken(db, androidId, tokenValue, amount) {
     return Promise.reject('Não autorizado')
   }
   const senderWallet = await db.get('SELECT * FROM wallets JOIN wallets_tokens WHERE id_token = ?', [token.id])
+  if (senderWallet == null) {
+    return Promise.reject('Não autorizado')
+  }
 
   try {
     await db.run('BEGIN TRANSACTION')
@@ -87,11 +93,11 @@ async function spendToken(db, androidId, tokenValue, amount) {
       WHERE id = ?`,
       [senderToken.id]
     )
-    // zoopApi.p2p({
-    //   to: receiverWallet.zoop_buyer_id,
-    //   from: senderWallet.zoop_buyer_id,
-    //   amount: amount
-    // })
+    p2pCallback({
+      to: receiverWallet.zoop_buyer_id,
+      from: senderWallet.zoop_buyer_id,
+      amount: amount
+    })
     await db.run('COMMIT')
     return Promise.resolve({msg: 'Autorizado'});
   } catch (error) {
@@ -120,9 +126,30 @@ async function createWallet(db, androidId) {
     return Promise.reject(error)
   }
 }
+async function updateWallet(db, androidId, zoopBuyerId, saldoCache, identificationJson) {
+  try {
+    await db.run(
+      `UPDATE wallets SET
+      android_id = ?,
+      zoop_buyer_id = ?,
+      saldo_cache = ?,
+      identification_json = ?
+      WHERE android_id = ?`,
+      [ androidId, zoopBuyerId, saldoCache, identificationJson, androidId]
+    )
+    wallet = await db.get(
+      'SELECT * FROM wallets WHERE android_id = ?',
+      [ androidId ]
+    )
+    return Promise.resolve(wallet)
+  } catch (error) {
+    return Promise.reject(error)
+  }
+}
+
 
 function test() {
-  sqlite.open('./data/sqlite.db', { Promise }).then(async (db) => {
+  getDatabase().then(async (db) => {
     try {
       const w1 = await createWallet(db);
       // console.log({w1})
@@ -134,16 +161,20 @@ function test() {
         limit_used_times: 10,
       })
       // console.log({token})
-      const result = await spendToken(db, w2['android_id'], token['token_value'], 10)
-      console.log({result})
+      const result = await spendToken(db, w2['android_id'], token['token_value'], 1000, () => true)
+      console.log({'self-test': result})
     } catch (e) {
-      console.log({e})
+      console.log({'self-test-error': e})
     }
   })
 }
 
 test()
 
-// module.exports = {
-//   newWallet: newWallet
-// };
+module.exports = {
+  getDatabase,
+  createToken,
+  spendToken,
+  createWallet,
+  updateWallet,
+};
